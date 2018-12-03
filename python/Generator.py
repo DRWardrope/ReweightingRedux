@@ -1,5 +1,5 @@
 import numpy as np
-import root_numpy
+import uproot
 import scipy.stats as stats
 from sklearn.datasets import make_sparse_spd_matrix
 from sklearn.preprocessing import MinMaxScaler
@@ -12,6 +12,8 @@ def main():
     For each of the 2D and 4D, there is a "target" dataset, which the 
     reweighting aims to reconstruct, and a "source" dataset, which is 
     reweighted in order reconstruct the target.
+    NOTE: Removed dependency on ROOT, so cannot write to file. Will 
+          replace with uproot, if needed (and possible).
     '''
     source_2D = makeDataset(2, 1e6, random_states=[74205,75633])
     scaler = MinMaxScaler(copy=False)
@@ -23,7 +25,7 @@ def main():
                             eff2DFunc([target_2D[:,0], target_2D[:,1]]) 
                             > np.random.rand(len(target_2D))
                          ]
-    writeRootFile(source_2D, target_2D, "test.root")
+ #   writeRootFile(source_2D, target_2D, "test.root")
 
     source_4D = makeDataset(4, 1e6, random_states=[34154,27164992])
     scaler_4D = MinMaxScaler(copy=False)
@@ -40,7 +42,7 @@ def main():
                             ]) 
                             > np.random.rand(len(target_4D))
                          ]
-    writeRootFile(source_4D, target_4D, "test.root", mode="update")
+#    writeRootFile(source_4D, target_4D, "test.root", mode="update")
 
 def makeDataset(n_dimensions, n_total, random_states=[None, None]):
     '''
@@ -112,40 +114,40 @@ def eff4DFunc(X):
     c2 = 0; c4 = 0.5*np.pi;
     return a0+a1*X[1]+a2*np.exp(b2*X[2]+c2)+a3*np.sin(b4*X[3]+c4)
 
-def writeRootFile(source, target, filename, mode="recreate"):
-    '''
-    Writes the source and target datasets to a root file.
-    Inputs: source and target = np.arrays to write to file.
-            filename = name of the root file to write to.
-            mode = 'recreate' will overwrite an existing file named 'filename'
-                   'update' will write trees into existing file 'filename'
-    Output: None
-    Method: the input numpy ndarrays are converted to recarrays, then 
-            root_numpy is used to write these to a root file.
-    '''
-    # Work out names for branches and add formats
-    nD = source.shape[1]
-    branchnames = [] 
-    for i in range(nD):
-       branchnames.append("X{}".format(i+1)) 
-    branchnames = ",".join(branchnames) 
-    formats = ",".join(["f8"]*nD)
-    print("Writing {} source events, with branches {} in formats {}".
-           format(len(source), branchnames, formats)
-         )
-    
-    source_root = np.core.records.fromarrays(
-        source.transpose(), names=branchnames, formats=formats,
-    )
-    root_numpy.array2root(
-        source_root, filename, treename="source_{}D".format(nD), mode=mode
-    )
-    target_root = np.core.records.fromarrays(
-        target.transpose(), names=branchnames, formats=formats,
-    )
-    root_numpy.array2root(
-        target_root, filename, treename="target_{}D".format(nD), mode="update"
-    )
+#def writeRootFile(source, target, filename, mode="recreate"):
+#    '''
+#    Writes the source and target datasets to a root file.
+#    Inputs: source and target = np.arrays to write to file.
+#            filename = name of the root file to write to.
+#            mode = 'recreate' will overwrite an existing file named 'filename'
+#                   'update' will write trees into existing file 'filename'
+#    Output: None
+#    Method: the input numpy ndarrays are converted to recarrays, then 
+#            root_numpy is used to write these to a root file.
+#    '''
+#    # Work out names for branches and add formats
+#    nD = source.shape[1]
+#    branchnames = [] 
+#    for i in range(nD):
+#       branchnames.append("X{}".format(i+1)) 
+#    branchnames = ",".join(branchnames) 
+#    formats = ",".join(["f8"]*nD)
+#    print("Writing {} source events, with branches {} in formats {}".
+#           format(len(source), branchnames, formats)
+#         )
+#    
+#    source_root = np.core.records.fromarrays(
+#        source.transpose(), names=branchnames, formats=formats,
+#    )
+#    root_numpy.array2root(
+#        source_root, filename, treename="source_{}D".format(nD), mode=mode
+#    )
+#    target_root = np.core.records.fromarrays(
+#        target.transpose(), names=branchnames, formats=formats,
+#    )
+#    root_numpy.array2root(
+#        target_root, filename, treename="target_{}D".format(nD), mode="update"
+#    )
 
 if __name__ == "__main__":
     main()
